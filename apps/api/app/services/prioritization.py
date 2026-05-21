@@ -44,7 +44,7 @@ def compute_procrastination_score(task: Task, *, now: datetime | None = None) ->
     now = now or datetime.now(tz=UTC)
     snooze_penalty = min(0.5, task.snooze_count * 0.1)
     
-    created = task.created_at
+    created = task.created_at or now
     if created.tzinfo is None:
         created = created.replace(tzinfo=UTC)
         

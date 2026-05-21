@@ -33,6 +33,7 @@ def test_checkbox_becomes_task_candidate() -> None:
 def test_event_heading_classification() -> None:
     md = "## Meeting with team\n\nDiscuss roadmap.\n"
     p = parse_markdown(md, file_path="n.md")
+    # 'Meeting' should be classified as EVENT due to EVENT_HINTS
     assert any(c.entity_type == EntityType.EVENT for c in p.candidates)
 
 

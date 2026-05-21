@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     ai_provider: str = "openai"
     ai_model: str = "gpt-4o-mini"
 
+    ollama_base_url: str = "http://ollama:11434"
+    ollama_model: str = "qwen2.5:7b"
+
     telegram_bot_token: str = ""
     telegram_admin_chat_id: str = ""
 

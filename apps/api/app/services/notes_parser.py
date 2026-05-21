@@ -147,7 +147,7 @@ def parse_markdown(text: str, *, file_path: str) -> ParsedNote:
     # 2. heading-level commitments / events
     for h in HEADING_RE.finditer(body):
         text_h = h.group(2).strip()
-        if not text_h or text_h == title:
+        if not text_h:
             continue
         kind, conf = _classify_text(text_h)
         if kind in (EntityType.TASK, EntityType.EVENT, EntityType.LEARNING):

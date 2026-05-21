@@ -48,8 +48,8 @@ async def send_test_notification(req: NotificationTestRequest) -> dict[str, Any]
 
 @router.get("/history", response_model=list[ReminderOut])
 async def get_notification_history(
+    db: SessionDep,
     limit: int = 50,
-    db: SessionDep = None
 ) -> Any:
     result = await db.execute(
         select(Reminder)

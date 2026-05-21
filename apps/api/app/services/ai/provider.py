@@ -128,36 +128,107 @@ class OpenAIProvider(AIProvider):
         return AIExtractionResponse(items=items, model=self._model, used_ai=True)
 
 
+class OllamaProvider(AIProvider):
+    name: "ollama"
+
+    def __init__(self, base_url: str, model: str) -> None:
+        self._base_url = base_url.rstrip("/")
+        self._model = model
+        self._endpoint = f"{self._base_url}/api/chat"
+
+    async def extract(
+        self, *, text: str, context_hints: dict[str, Any] | None = None
+    ) -> AIExtractionResponse:
+        hints = json.dumps(context_hints or {}, ensure_ascii=False)
+        user_prompt = (
+            f"Heuristic hints (drafts from a regex parser; may be wrong):\n{hints}\n\n"
+            f"Note text:\n```\n{text[:8000]}\n```"
+        )
+        payload = {
+            "model": self._model,
+            "stream": False,
+            "format": "json",
+            "messages": [
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": user_prompt},
+            ],
+        }
+        try:
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                r = await client.post(self._endpoint, json=payload)
+                r.raise_for_status()
+                content = r.json()["message"]["content"]
+        except Exception as e:
+            log.warning("ollama.extract_failed", error=str(e))
+            return AIExtractionResponse(items=[], model=self._model, used_ai=False)
+
+        try:
+            parsed = json.loads(content)
+            raw_items = parsed.get("items", [])
+        except (ValueError, KeyError):
+            log.warning("ollama.invalid_json", preview=content[:200])
+            return AIExtractionResponse(items=[], model=self._model, used_ai=False)
+
+        items: list[ExtractedItem] = []
+        for ri in raw_items:
+            try:
+                items.append(ExtractedItem.model_validate(ri))
+            except Exception as e:
+                log.warning("ollama.invalid_item", error=str(e), item=ri)
+        return AIExtractionResponse(items=items, model=self._model, used_ai=True)
+
+
 async def generate_structured(prompt: str, schema: dict[str, Any]) -> dict[str, Any] | None:
     settings = get_settings()
-    if settings.ai_provider != "openai" or not settings.openai_api_key:
-        log.warning("generate_structured.skipped", reason="no api key")
+    
+    if settings.ai_provider == "openai" and settings.openai_api_key:
+        payload = {
+            "model": settings.ai_model,
+            "temperature": 0.1,
+            "response_format": {"type": "json_object"},
+            "messages": [
+                {
+                    "role": "system", 
+                    "content": f"You are a helpful AI. Output ONLY valid JSON matching this schema: {json.dumps(schema)}"
+                },
+                {"role": "user", "content": prompt},
+            ],
+        }
+        headers = {"authorization": f"Bearer {settings.openai_api_key}"}
+        endpoint = "https://api.openai.com/v1/chat/completions"
+    elif settings.ai_provider == "ollama":
+        payload = {
+            "model": settings.ollama_model,
+            "stream": False,
+            "format": "json",
+            "messages": [
+                {
+                    "role": "system", 
+                    "content": f"You are a helpful AI. Output ONLY valid JSON matching this schema: {json.dumps(schema)}"
+                },
+                {"role": "user", "content": prompt},
+            ],
+        }
+        headers = {}
+        endpoint = f"{settings.ollama_base_url.rstrip('/')}/api/chat"
+    else:
+        log.warning("generate_structured.skipped", reason="no valid provider configured")
         return None
-        
-    payload = {
-        "model": settings.ai_model,
-        "temperature": 0.1,
-        "response_format": {"type": "json_object"},
-        "messages": [
-            {
-                "role": "system", 
-                "content": f"You are a helpful AI. Output ONLY valid JSON matching this schema: {json.dumps(schema)}"
-            },
-            {"role": "user", "content": prompt},
-        ],
-    }
-    headers = {
-        "authorization": f"Bearer {settings.openai_api_key}",
-        "content-type": "application/json",
-    }
+
     try:
-        async with httpx.AsyncClient(timeout=45.0) as client:
-            r = await client.post("https://api.openai.com/v1/chat/completions", json=payload, headers=headers)
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            r = await client.post(endpoint, json=payload, headers=headers)
             r.raise_for_status()
-            content = r.json()["choices"][0]["message"]["content"]
+            res_json = r.json()
+            
+            if settings.ai_provider == "openai":
+                content = res_json["choices"][0]["message"]["content"]
+            else:
+                content = res_json["message"]["content"]
+                
             return json.loads(content)
     except Exception as e:
-        log.warning("generate_structured.failed", error=str(e))
+        log.warning("generate_structured.failed", error=str(e), provider=settings.ai_provider)
         return None
 
 
@@ -165,4 +236,6 @@ def get_provider() -> AIProvider:
     settings = get_settings()
     if settings.ai_provider == "openai" and settings.openai_api_key:
         return OpenAIProvider(api_key=settings.openai_api_key, model=settings.ai_model)
+    if settings.ai_provider == "ollama":
+        return OllamaProvider(base_url=settings.ollama_base_url, model=settings.ollama_model)
     return NullProvider()
