@@ -22,6 +22,8 @@ from app.models.notes import (
     NoteDocument,
     NoteSource,
 )
+from app.services.ai import get_provider
+from app.services.ai.extraction import extract_for_document
 from app.services.notes_parser import file_checksum, parse_markdown
 
 log = structlog.get_logger("notes.ingest")
@@ -177,7 +179,12 @@ async def sync_source(session: AsyncSession, source: NoteSource) -> IngestStats:
             doc, changed = await _upsert_document(session, source, rel, text)
             if changed:
                 stats.files_indexed += 1
-                stats.entities_created += await _materialize_entities(session, doc, text)
+                provider = get_provider()
+                if provider.name == "null":
+                    stats.entities_created += await _materialize_entities(session, doc, text)
+                else:
+                    res = await extract_for_document(session, doc, provider=provider)
+                    stats.entities_created += res.created
         except Exception as exc:  # noqa: BLE001
             log.warning("ingest.file_error", path=str(fp), error=str(exc))
             stats.errors += 1

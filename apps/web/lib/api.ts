@@ -155,7 +155,13 @@ export interface IngestStats {
   errors: number;
 }
 
+export interface AIStatus {
+  provider: string;
+  enabled: boolean;
+}
+
 export const notesApi = {
+  aiStatus: () => api<AIStatus>('/api/v1/notes/ai/status'),
   listSources: () => api<NoteSource[]>('/api/v1/notes/sources'),
   createSource: (b: { name: string; path: string; type?: NoteSourceType }) =>
     api<NoteSource>('/api/v1/notes/sources', { method: 'POST', body: JSON.stringify(b) }),

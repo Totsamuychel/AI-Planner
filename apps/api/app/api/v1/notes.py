@@ -23,9 +23,34 @@ from app.schemas.notes import (
     SyncResult,
 )
 from app.schemas.task import TaskRead
+from app.services.ai import get_provider
+from app.services.ai.extraction import extract_for_document
 from app.services.notes_ingest import accept_entity, sync_all_for_owner, sync_source
 
 router = APIRouter(prefix="/notes", tags=["notes"])
+
+
+@router.get("/ai/status")
+async def ai_status() -> dict[str, str | bool]:
+    p = get_provider()
+    return {"provider": p.name, "enabled": p.name != "null"}
+
+
+@router.post("/documents/{document_id}/extract")
+async def extract_document(
+    document_id: uuid.UUID, user: CurrentUser, session: SessionDep
+) -> dict:
+    doc = (
+        await session.execute(
+            select(NoteDocument).where(
+                NoteDocument.id == document_id, NoteDocument.owner_id == user.id
+            )
+        )
+    ).scalar_one_or_none()
+    if doc is None:
+        raise HTTPException(status_code=404, detail="document not found")
+    res = await extract_for_document(session, doc, provider=get_provider())
+    return {"created": res.created, "used_ai": res.used_ai, "model": res.model}
 
 
 @router.get("/sources", response_model=list[NoteSourceRead])
