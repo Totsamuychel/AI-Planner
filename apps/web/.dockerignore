@@ -1,0 +1,7 @@
+node_modules
+.next
+.turbo
+out
+dist
+.env
+.env.local

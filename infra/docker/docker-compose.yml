@@ -1,0 +1,88 @@
+name: neuroplan
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-neuroplan}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-neuroplan}
+      POSTGRES_DB: ${POSTGRES_DB:-neuroplan}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-neuroplan} -d ${POSTGRES_DB:-neuroplan}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build:
+      context: ../../apps/api
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: ../../.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-neuroplan}:${POSTGRES_PASSWORD:-neuroplan}@postgres:5432/${POSTGRES_DB:-neuroplan}
+      SYNC_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-neuroplan}:${POSTGRES_PASSWORD:-neuroplan}@postgres:5432/${POSTGRES_DB:-neuroplan}
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../../apps/api:/app
+
+  worker:
+    build:
+      context: ../../apps/worker
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: ../../.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-neuroplan}:${POSTGRES_PASSWORD:-neuroplan}@postgres:5432/${POSTGRES_DB:-neuroplan}
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ../../apps/worker:/app
+
+  web:
+    build:
+      context: ../../apps/web
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: ../../.env
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      API_INTERNAL_URL: http://api:8000
+    depends_on:
+      - api
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../../apps/web:/app
+      - /app/node_modules
+      - /app/.next
+
+volumes:
+  postgres_data:
