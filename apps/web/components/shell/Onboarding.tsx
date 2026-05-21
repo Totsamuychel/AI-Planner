@@ -6,9 +6,11 @@ import { Sparkles, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
 export function Onboarding() {
+  const [mounted, setMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const hasSeen = localStorage.getItem('neuroplan_onboarding');
     if (!hasSeen) {
       // Delay slightly for dramatic effect
@@ -21,6 +23,9 @@ export function Onboarding() {
     setIsOpen(false);
     localStorage.setItem('neuroplan_onboarding', 'true');
   };
+
+  // Skip rendering until mounted so the server and client output match.
+  if (!mounted) return null;
 
   return (
     <AnimatePresence>
