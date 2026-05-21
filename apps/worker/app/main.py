@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import signal
 import sys
 from datetime import datetime
@@ -17,6 +18,7 @@ import structlog
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from app.config import get_settings
+from app.jobs.notes_sync import run_notes_sync
 
 
 def _configure_logging() -> None:
@@ -45,6 +47,13 @@ async def run() -> None:
 
     scheduler = AsyncIOScheduler(timezone=settings.tz)
     scheduler.add_job(heartbeat, "interval", seconds=30, id="heartbeat", replace_existing=True)
+    scheduler.add_job(
+        run_notes_sync,
+        "interval",
+        seconds=int(os.getenv("NOTES_SYNC_SECONDS", "300")),
+        id="notes_sync",
+        replace_existing=True,
+    )
     scheduler.start()
 
     stop = asyncio.Event()

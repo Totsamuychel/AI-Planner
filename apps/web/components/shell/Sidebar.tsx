@@ -26,7 +26,7 @@ const items: Item[] = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard, enabled: true },
   { href: '/tasks', label: 'Tasks', icon: ListChecks, enabled: true },
   { href: '/calendar', label: 'Calendar', icon: CalendarDays, phase: 4 },
-  { href: '/inbox', label: 'Notes Inbox', icon: Inbox, phase: 2 },
+  { href: '/inbox', label: 'Notes Inbox', icon: Inbox, enabled: true },
   { href: '/learning', label: 'Learning', icon: GraduationCap, phase: 6 },
   { href: '/analytics', label: 'Analytics', icon: LineChart, phase: 8 },
   { href: '/settings', label: 'Settings', icon: Settings, phase: 8 },

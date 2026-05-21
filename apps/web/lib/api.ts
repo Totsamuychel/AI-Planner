@@ -114,3 +114,59 @@ export const projectsApi = {
 export const analyticsApi = {
   dashboard: () => api<DashboardAnalytics>('/api/v1/analytics/dashboard'),
 };
+
+// ---------- notes ----------
+
+export type EntityType = 'task' | 'event' | 'idea' | 'learning' | 'reference' | 'info' | 'reflection';
+export type EntityStatus = 'pending' | 'accepted' | 'rejected' | 'auto';
+export type NoteSourceType = 'obsidian' | 'markdown_dir' | 'txt_dir';
+
+export interface NoteSource {
+  id: string;
+  name: string;
+  path: string;
+  type: NoteSourceType;
+  enabled: boolean;
+  sync_interval_seconds: number;
+  last_synced_at: string | null;
+  last_error: string | null;
+}
+
+export interface InboxEntity {
+  id: string;
+  document_id: string;
+  entity_type: EntityType;
+  title: string;
+  content: string;
+  source_excerpt: string;
+  source_line: number | null;
+  normalized_data: Record<string, unknown>;
+  confidence: number;
+  status: EntityStatus;
+  promoted_task_id: string | null;
+  created_at: string;
+}
+
+export interface IngestStats {
+  files_seen: number;
+  files_indexed: number;
+  files_skipped: number;
+  entities_created: number;
+  errors: number;
+}
+
+export const notesApi = {
+  listSources: () => api<NoteSource[]>('/api/v1/notes/sources'),
+  createSource: (b: { name: string; path: string; type?: NoteSourceType }) =>
+    api<NoteSource>('/api/v1/notes/sources', { method: 'POST', body: JSON.stringify(b) }),
+  deleteSource: (id: string) =>
+    api<void>(`/api/v1/notes/sources/${id}`, { method: 'DELETE' }),
+  syncAll: () =>
+    api<{ sources: Record<string, IngestStats> }>('/api/v1/notes/sync', { method: 'POST' }),
+  inbox: (params?: URLSearchParams) =>
+    api<Page<InboxEntity>>(`/api/v1/notes/inbox${params?.toString() ? `?${params}` : ''}`),
+  accept: (id: string) =>
+    api<Task>(`/api/v1/notes/inbox/${id}/accept`, { method: 'POST' }),
+  reject: (id: string) =>
+    api<InboxEntity>(`/api/v1/notes/inbox/${id}/reject`, { method: 'POST' }),
+};

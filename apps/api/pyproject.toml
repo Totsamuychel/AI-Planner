@@ -19,6 +19,8 @@ dependencies = [
   "passlib[bcrypt]>=1.7.4",
   "structlog>=24.4.0",
   "orjson>=3.10.7",
+  "pyyaml>=6.0.2",
+  "watchfiles>=0.24.0",
 ]
 
 [project.optional-dependencies]

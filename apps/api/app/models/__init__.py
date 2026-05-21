@@ -1,6 +1,14 @@
 """ORM models."""
 
 from app.models.enums import EnergyType, PriorityBucket, TaskSourceType, TaskStatus
+from app.models.notes import (
+    EntityStatus,
+    EntityType,
+    ExtractedEntity,
+    NoteDocument,
+    NoteSource,
+    NoteSourceType,
+)
 from app.models.project import Project
 from app.models.tag import Tag, task_tags
 from app.models.task import Task
@@ -8,6 +16,12 @@ from app.models.user import User
 
 __all__ = [
     "EnergyType",
+    "EntityStatus",
+    "EntityType",
+    "ExtractedEntity",
+    "NoteDocument",
+    "NoteSource",
+    "NoteSourceType",
     "PriorityBucket",
     "Project",
     "Tag",
