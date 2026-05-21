@@ -160,6 +160,31 @@ export interface AIStatus {
   enabled: boolean;
 }
 
+// ---------- schedule ----------
+
+export interface ScheduledBlock {
+  task_id: string;
+  title: string;
+  priority: PriorityBucket;
+  priority_score: number;
+  energy_type: EnergyType | null;
+  start: string;
+  end: string;
+  overflow: boolean;
+}
+
+export interface DayPlan {
+  date: string;
+  blocks: ScheduledBlock[];
+  overflow_count: number;
+}
+
+export const scheduleApi = {
+  today: () => api<DayPlan>('/api/v1/schedule/today'),
+  generate: () => api<DayPlan>('/api/v1/schedule/generate', { method: 'POST' }),
+  rebalance: () => api<DayPlan>('/api/v1/schedule/rebalance', { method: 'POST' }),
+};
+
 export const notesApi = {
   aiStatus: () => api<AIStatus>('/api/v1/notes/ai/status'),
   listSources: () => api<NoteSource[]>('/api/v1/notes/sources'),

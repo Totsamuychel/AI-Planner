@@ -24,6 +24,10 @@ export default function DashboardPage() {
       return tasksApi.list(p);
     },
   });
+  const todaySchedule = useQuery({
+    queryKey: ['schedule', 'today'],
+    queryFn: scheduleApi.today,
+  });
 
   const totals = analytics.data?.totals;
 
@@ -92,6 +96,26 @@ export default function DashboardPage() {
           <CardHeader title="Completion · 7 days" hint="Tasks completed per day" />
           <div className="px-5 pb-5 pt-4">
             <Sparkline data={analytics.data?.completion_7d ?? []} />
+          </div>
+        </Card>
+      </section>
+
+      <section>
+        <Card className="px-5 pb-6 pt-5">
+          <CardHeader
+            title="Today's schedule"
+            hint="6:00 → 23:00"
+            right={
+              <Link
+                href="/calendar"
+                className="text-xs text-accent-glow underline-offset-4 hover:underline"
+              >
+                Open calendar →
+              </Link>
+            }
+          />
+          <div className="mt-4 max-h-[420px] overflow-y-auto">
+            <ScheduleTimeline blocks={todaySchedule.data?.blocks ?? []} compact />
           </div>
         </Card>
       </section>

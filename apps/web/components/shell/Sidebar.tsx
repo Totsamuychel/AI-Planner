@@ -25,7 +25,7 @@ type Item = {
 const items: Item[] = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard, enabled: true },
   { href: '/tasks', label: 'Tasks', icon: ListChecks, enabled: true },
-  { href: '/calendar', label: 'Calendar', icon: CalendarDays, phase: 4 },
+  { href: '/calendar', label: 'Calendar', icon: CalendarDays, enabled: true },
   { href: '/inbox', label: 'Notes Inbox', icon: Inbox, enabled: true },
   { href: '/learning', label: 'Learning', icon: GraduationCap, phase: 6 },
   { href: '/analytics', label: 'Analytics', icon: LineChart, phase: 8 },
