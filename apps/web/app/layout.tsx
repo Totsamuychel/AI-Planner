@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { Providers } from '@/components/providers';
+import { AppShell } from '@/components/shell/AppShell';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -15,7 +17,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             aria-hidden
             className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[480px] bg-grid-fade"
           />
-          {children}
+          <Providers>
+            <AppShell>{children}</AppShell>
+          </Providers>
         </div>
       </body>
     </html>

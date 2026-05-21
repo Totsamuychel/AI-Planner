@@ -1,0 +1,116 @@
+from __future__ import annotations
+
+import uuid
+
+from fastapi import APIRouter, HTTPException, Query, status
+
+from app.api.deps import CurrentUser, SessionDep
+from app.models.enums import PriorityBucket, TaskStatus
+from app.repositories.tasks import TaskFilter, TaskRepository
+from app.schemas.common import Page
+from app.schemas.task import TaskCreate, TaskRead, TaskSnoozeIn, TaskUpdate
+
+router = APIRouter(prefix="/tasks", tags=["tasks"])
+
+
+def _repo(session: SessionDep) -> TaskRepository:
+    return TaskRepository(session)
+
+
+@router.get("", response_model=Page[TaskRead])
+async def list_tasks(
+    user: CurrentUser,
+    session: SessionDep,
+    status_in: list[TaskStatus] | None = Query(default=None, alias="status"),
+    priority_in: list[PriorityBucket] | None = Query(default=None, alias="priority"),
+    project_id: uuid.UUID | None = None,
+    search: str | None = None,
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+) -> Page[TaskRead]:
+    repo = TaskRepository(session)
+    rows, total = await repo.list(
+        user.id,
+        filt=TaskFilter(
+            status=status_in,
+            priority=priority_in,
+            project_id=project_id,
+            search=search,
+        ),
+        limit=limit,
+        offset=offset,
+    )
+    return Page[TaskRead](
+        items=[TaskRead.model_validate(t) for t in rows],
+        total=total,
+        limit=limit,
+        offset=offset,
+    )
+
+
+@router.post("", response_model=TaskRead, status_code=status.HTTP_201_CREATED)
+async def create_task(
+    payload: TaskCreate, user: CurrentUser, session: SessionDep
+) -> TaskRead:
+    task = await TaskRepository(session).create(user.id, payload)
+    return TaskRead.model_validate(task)
+
+
+@router.get("/{task_id}", response_model=TaskRead)
+async def get_task(task_id: uuid.UUID, user: CurrentUser, session: SessionDep) -> TaskRead:
+    task = await TaskRepository(session).get(task_id, user.id)
+    if task is None:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return TaskRead.model_validate(task)
+
+
+@router.patch("/{task_id}", response_model=TaskRead)
+async def update_task(
+    task_id: uuid.UUID, payload: TaskUpdate, user: CurrentUser, session: SessionDep
+) -> TaskRead:
+    repo = TaskRepository(session)
+    task = await repo.get(task_id, user.id)
+    if task is None:
+        raise HTTPException(status_code=404, detail="Task not found")
+    task = await repo.update(task, payload)
+    return TaskRead.model_validate(task)
+
+
+@router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_task(task_id: uuid.UUID, user: CurrentUser, session: SessionDep) -> None:
+    repo = TaskRepository(session)
+    task = await repo.get(task_id, user.id)
+    if task is None:
+        raise HTTPException(status_code=404, detail="Task not found")
+    await repo.delete(task)
+
+
+@router.post("/{task_id}/complete", response_model=TaskRead)
+async def complete_task(
+    task_id: uuid.UUID, user: CurrentUser, session: SessionDep
+) -> TaskRead:
+    repo = TaskRepository(session)
+    task = await repo.get(task_id, user.id)
+    if task is None:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return TaskRead.model_validate(await repo.complete(task))
+
+
+@router.post("/{task_id}/snooze", response_model=TaskRead)
+async def snooze_task(
+    task_id: uuid.UUID,
+    payload: TaskSnoozeIn,
+    user: CurrentUser,
+    session: SessionDep,
+) -> TaskRead:
+    repo = TaskRepository(session)
+    task = await repo.get(task_id, user.id)
+    if task is None:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return TaskRead.model_validate(await repo.snooze(task, payload.until))
+
+
+@router.post("/reprioritize", response_model=dict)
+async def reprioritize_all(user: CurrentUser, session: SessionDep) -> dict:
+    count = await TaskRepository(session).reprioritize_all(user.id)
+    return {"reprioritized": count}
