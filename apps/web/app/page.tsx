@@ -3,12 +3,13 @@
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { analyticsApi, tasksApi } from '@/lib/api';
+import { analyticsApi, tasksApi, scheduleApi } from '@/lib/api';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { Stat } from '@/components/ui/Stat';
 import { Sparkline } from '@/components/ui/Sparkline';
 import { TaskRow } from '@/components/tasks/TaskRow';
 import { NewTaskForm } from '@/components/tasks/NewTaskForm';
+import { ScheduleTimeline } from '@/components/schedule/Timeline';
 
 export default function DashboardPage() {
   const analytics = useQuery({
