@@ -1,6 +1,15 @@
 """ORM models."""
 
-from app.models.enums import EnergyType, PriorityBucket, TaskSourceType, TaskStatus
+from app.models.enums import (
+    EnergyType,
+    LearningItemStatus,
+    PriorityBucket,
+    ReminderChannel,
+    ReminderStatus,
+    TaskSourceType,
+    TaskStatus,
+)
+from app.models.learning import LearningItem, LearningSession
 from app.models.notes import (
     EntityStatus,
     EntityType,
@@ -10,6 +19,7 @@ from app.models.notes import (
     NoteSourceType,
 )
 from app.models.project import Project
+from app.models.reminder import Reminder
 from app.models.tag import Tag, task_tags
 from app.models.task import Task
 from app.models.user import User
@@ -19,11 +29,17 @@ __all__ = [
     "EntityStatus",
     "EntityType",
     "ExtractedEntity",
+    "LearningItem",
+    "LearningItemStatus",
+    "LearningSession",
     "NoteDocument",
     "NoteSource",
     "NoteSourceType",
     "PriorityBucket",
     "Project",
+    "Reminder",
+    "ReminderChannel",
+    "ReminderStatus",
     "Tag",
     "Task",
     "TaskSourceType",

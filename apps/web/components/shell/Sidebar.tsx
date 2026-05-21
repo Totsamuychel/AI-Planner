@@ -27,9 +27,9 @@ const items: Item[] = [
   { href: '/tasks', label: 'Tasks', icon: ListChecks, enabled: true },
   { href: '/calendar', label: 'Calendar', icon: CalendarDays, enabled: true },
   { href: '/inbox', label: 'Notes Inbox', icon: Inbox, enabled: true },
-  { href: '/learning', label: 'Learning', icon: GraduationCap, phase: 6 },
+  { href: '/learning', label: 'Learning', icon: GraduationCap, enabled: true },
   { href: '/analytics', label: 'Analytics', icon: LineChart, phase: 8 },
-  { href: '/settings', label: 'Settings', icon: Settings, phase: 8 },
+  { href: '/settings', label: 'Settings', icon: Settings, enabled: true },
 ];
 
 export function Sidebar() {
@@ -73,9 +73,9 @@ export function Sidebar() {
       </nav>
 
       <div className="mt-auto rounded-xl border border-border bg-bg-card/60 p-3 text-xs text-gray-400">
-        <p className="text-[10px] uppercase tracking-widest text-gray-500">Phase 1 active</p>
+        <p className="text-[10px] uppercase tracking-widest text-gray-500">Phase 6 active</p>
         <p className="mt-2 leading-relaxed">
-          Core task manager — CRUD, prioritization, dashboard KPIs.
+          Learning Planner — goals, sessions, and spaced repetition.
         </p>
       </div>
     </aside>

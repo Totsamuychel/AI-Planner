@@ -201,3 +201,54 @@ export const notesApi = {
   reject: (id: string) =>
     api<InboxEntity>(`/api/v1/notes/inbox/${id}/reject`, { method: 'POST' }),
 };
+
+// ---------- learning ----------
+
+export type LearningItemStatus = 'backlog' | 'learning' | 'reviewing' | 'completed' | 'archived';
+
+export interface LearningSession {
+  id: string;
+  learning_item_id: string;
+  notes: string | null;
+  duration_minutes: number;
+  created_at: string;
+}
+
+export interface LearningItem {
+  id: string;
+  title: string;
+  topic: string;
+  level: string | null;
+  target_date: string | null;
+  status: LearningItemStatus;
+  next_review_at: string | null;
+  estimated_sessions: number;
+  completed_sessions: number;
+  sessions: LearningSession[];
+}
+
+export const learningApi = {
+  listGoals: () => api<LearningItem[]>('/api/v1/learning/goals'),
+  createGoal: (body: { title: string; topic: string; level?: string; estimated_sessions?: number }) =>
+    api<LearningItem>('/api/v1/learning/goals', { method: 'POST', body: JSON.stringify(body) }),
+  logSession: (id: string, body: { notes?: string; duration_minutes: number }) =>
+    api<LearningSession>(`/api/v1/learning/goals/${id}/sessions`, { method: 'POST', body: JSON.stringify(body) }),
+  getReviewItems: () => api<LearningItem[]>('/api/v1/learning/review'),
+};
+
+
+export const settingsApi = {
+  updateTelegram: (telegram_chat_id: string | null) =>
+    api<{ status: string; telegram_chat_id: string | null }>('/api/v1/settings/telegram', {
+      method: 'PATCH',
+      body: JSON.stringify({ telegram_chat_id }),
+    }),
+};
+
+export const notificationsApi = {
+  test: (message: string, channel: 'desktop' | 'telegram') =>
+    api<{ status: string }>('/api/v1/notifications/test', {
+      method: 'POST',
+      body: JSON.stringify({ message, channel }),
+    }),
+};

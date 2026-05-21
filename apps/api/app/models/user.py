@@ -21,12 +21,16 @@ class User(Base, TimestampMixin):
     locale: Mapped[str] = mapped_column(String(16), nullable=False, default="en")
     work_hours_start: Mapped[str] = mapped_column(String(5), nullable=False, default="09:00")
     work_hours_end: Mapped[str] = mapped_column(String(5), nullable=False, default="18:00")
+    telegram_chat_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
     projects: Mapped[list["Project"]] = relationship(  # noqa: F821
         "Project", back_populates="owner", cascade="all,delete-orphan"
     )
     tasks: Mapped[list["Task"]] = relationship(  # noqa: F821
         "Task", back_populates="owner", cascade="all,delete-orphan"
+    )
+    learning_items: Mapped[list["LearningItem"]] = relationship(  # noqa: F821
+        "LearningItem", back_populates="owner", cascade="all,delete-orphan"
     )
 
     def __repr__(self) -> str:

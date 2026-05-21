@@ -19,6 +19,8 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from app.config import get_settings
 from app.jobs.notes_sync import run_notes_sync
+from app.jobs.notifications_dispatch import run_notifications_dispatch
+from app.bot import start_bot
 
 
 def _configure_logging() -> None:
@@ -54,7 +56,17 @@ async def run() -> None:
         id="notes_sync",
         replace_existing=True,
     )
+    scheduler.add_job(
+        run_notifications_dispatch,
+        "interval",
+        seconds=60,
+        id="notifications_dispatch",
+        replace_existing=True,
+    )
     scheduler.start()
+
+    # Start Telegram Bot in the background
+    bot_task = asyncio.create_task(start_bot())
 
     stop = asyncio.Event()
 
@@ -72,6 +84,8 @@ async def run() -> None:
 
     await stop.wait()
     scheduler.shutdown(wait=False)
+    if not bot_task.done():
+        bot_task.cancel()
     log.info("worker.shutdown")
 
 

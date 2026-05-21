@@ -32,3 +32,25 @@ class TaskSourceType(StrEnum):
     AI = "ai"
     CALENDAR = "calendar"
     IMPORT = "import"
+
+
+class ReminderStatus(StrEnum):
+    PENDING = "pending"
+    SENT = "sent"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+
+class ReminderChannel(StrEnum):
+    TELEGRAM = "telegram"
+    DESKTOP = "desktop"
+    EMAIL = "email"
+
+
+class LearningItemStatus(StrEnum):
+    BACKLOG = "backlog"
+    LEARNING = "learning"
+    REVIEWING = "reviewing"
+    COMPLETED = "completed"
+    ARCHIVED = "archived"
+

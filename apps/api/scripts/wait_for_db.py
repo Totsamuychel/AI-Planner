@@ -14,9 +14,13 @@ def main() -> int:
     settings = get_settings()
     deadline = time.time() + 60
     last_err: Exception | None = None
+    
+    # psycopg.connect needs 'postgresql://' not 'postgresql+psycopg://'
+    url = settings.sync_database_url.replace("+psycopg", "")
+    
     while time.time() < deadline:
         try:
-            with psycopg.connect(settings.sync_database_url, connect_timeout=3) as conn:
+            with psycopg.connect(url, connect_timeout=3) as conn:
                 conn.execute("SELECT 1")
             print("db ready", flush=True)
             return 0

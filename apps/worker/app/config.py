@@ -10,6 +10,7 @@ class WorkerSettings(BaseSettings):
     tz: str = "UTC"
     redis_url: str = "redis://redis:6379/0"
     database_url: str = "postgresql+asyncpg://neuroplan:neuroplan@postgres:5432/neuroplan"
+    telegram_bot_token: str | None = None
 
 
 @lru_cache(maxsize=1)
