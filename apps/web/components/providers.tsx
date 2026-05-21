@@ -23,7 +23,7 @@ export function Providers({ children }: { children: ReactNode }) {
 
     eventSource.onmessage = (event) => {
       if (Notification.permission === 'granted') {
-        new Notification('NeuroPlan', {
+        new Notification('AI Planner', {
           body: event.data,
           icon: '/favicon.ico',
         });

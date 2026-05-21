@@ -42,7 +42,7 @@ export function Sidebar() {
           <Sparkles size={16} className="text-bg" />
         </span>
         <div className="leading-tight">
-          <div className="text-sm font-semibold">NeuroPlan</div>
+          <div className="text-sm font-semibold">AI Planner</div>
           <div className="text-[10px] uppercase tracking-widest text-gray-500">v0.1</div>
         </div>
       </Link>

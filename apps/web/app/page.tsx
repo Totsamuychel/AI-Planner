@@ -71,7 +71,7 @@ export default function DashboardPage() {
         <Card className="lg:col-span-2">
           <CardHeader
             title="Top priorities"
-            hint="Sorted by NeuroPlan priority score"
+            hint="Sorted by AI Planner priority score"
             right={
               <Link
                 href="/tasks"

@@ -25,7 +25,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 def create_app() -> FastAPI:
     settings = get_settings()
     app = FastAPI(
-        title="NeuroPlan API",
+        title="AI Planner API",
         version=__version__,
         default_response_class=ORJSONResponse,
         lifespan=lifespan,

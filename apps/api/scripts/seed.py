@@ -16,7 +16,7 @@ from app.services.users import get_or_create_default_user
 
 
 SAMPLE_PROJECTS = [
-    {"name": "NeuroPlan", "color": "#7c5cff", "description": "Self-hosted productivity OS."},
+    {"name": "AI Planner", "color": "#7c5cff", "description": "Self-hosted productivity OS."},
     {"name": "Learning", "color": "#22d3ee", "description": "Курсы и обучение."},
     {"name": "Life", "color": "#34d399", "description": "Personal errands and habits."},
 ]
@@ -28,7 +28,7 @@ def _sample_tasks(project_ids: dict[str, str]) -> list[dict]:
         {
             "title": "Спроектировать AI extraction pipeline",
             "description": "Sketch pipeline: ingest → chunk → extract → dedupe → save.",
-            "project_id": project_ids["NeuroPlan"],
+            "project_id": project_ids["AI Planner"],
             "status": TaskStatus.PLANNED,
             "due_date": now + timedelta(days=2),
             "importance_score": 0.85,
@@ -39,7 +39,7 @@ def _sample_tasks(project_ids: dict[str, str]) -> list[dict]:
         {
             "title": "Сделать дашборд страницы Tasks",
             "description": "List + filters + KPI cards + animations.",
-            "project_id": project_ids["NeuroPlan"],
+            "project_id": project_ids["AI Planner"],
             "status": TaskStatus.ACTIVE,
             "due_date": now + timedelta(hours=8),
             "importance_score": 0.8,

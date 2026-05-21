@@ -52,7 +52,7 @@ export default function TasksPage() {
           <p className="text-xs uppercase tracking-[0.2em] text-accent-glow">Tasks</p>
           <h1 className="mt-2 text-3xl font-semibold">All tasks</h1>
           <p className="mt-1 text-sm text-gray-400">
-            {q.data?.total ?? 0} total · grouped by NeuroPlan priority bucket.
+            {q.data?.total ?? 0} total · grouped by AI Planner priority bucket.
           </p>
         </div>
         <button

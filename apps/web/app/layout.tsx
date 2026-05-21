@@ -5,7 +5,7 @@ import { Onboarding } from '@/components/shell/Onboarding';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'NeuroPlan — AI Planner',
+  title: 'AI Planner',
   description: 'Personal productivity OS — tasks, notes, learning and reminders.',
 };
 

@@ -163,7 +163,7 @@ function SourcesCard({ sources }: { sources: { id: string; name: string; path: s
 
   return (
     <Card>
-      <CardHeader title="Sources" hint="Folders that NeuroPlan scans for markdown notes" />
+      <CardHeader title="Sources" hint="Folders that AI Planner scans for markdown notes" />
       <div className="space-y-3 px-5 pb-5 pt-3">
         {sources.length === 0 && (
           <div className="rounded-lg border border-dashed border-border px-3 py-4 text-xs text-gray-500">

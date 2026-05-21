@@ -5,7 +5,7 @@ import { settingsApi, notificationsApi } from '@/lib/api';
 
 export default function SettingsPage() {
   const [chatId, setChatId] = useState('');
-  const [testMessage, setTestMessage] = useState('Hello from NeuroPlan!');
+  const [testMessage, setTestMessage] = useState('Hello from AI Planner!');
 
   const handleSaveTelegram = async () => {
     try {

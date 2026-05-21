@@ -1,3 +1,3 @@
-"""NeuroPlan FastAPI application package."""
+"""AI Planner FastAPI application package."""
 
 __version__ = "0.1.0"

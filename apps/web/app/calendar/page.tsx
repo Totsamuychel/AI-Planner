@@ -62,7 +62,7 @@ export default function CalendarPage() {
       </header>
 
       <Card className="px-5 pb-6 pt-5">
-        <CardHeader title="Day timeline" hint="6:00 → 23:00 · powered by NeuroPlan scheduler" />
+        <CardHeader title="Day timeline" hint="6:00 → 23:00 · powered by AI Planner scheduler" />
         <div className="mt-4">
           <ScheduleTimeline blocks={plan?.blocks ?? []} />
         </div>

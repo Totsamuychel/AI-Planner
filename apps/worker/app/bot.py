@@ -22,7 +22,7 @@ bot = Bot(token=_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 @dp.message(Command("help"))
 async def cmd_help(message: Message) -> None:
     text = (
-        "🤖 <b>NeuroPlan Bot</b>\n\n"
+        "🤖 <b>AI Planner Bot</b>\n\n"
         "Available commands:\n"
         "/today - Get today's plan\n"
         "/tasks - List active tasks\n"

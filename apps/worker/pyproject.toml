@@ -1,7 +1,7 @@
 [project]
 name = "neuroplan-worker"
 version = "0.1.0"
-description = "NeuroPlan background worker"
+description = "AI Planner background worker"
 requires-python = ">=3.12"
 dependencies = [
   "apscheduler>=3.10.4",

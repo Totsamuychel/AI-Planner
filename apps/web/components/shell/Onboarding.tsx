@@ -44,7 +44,7 @@ export function Onboarding() {
             </div>
             
             <div>
-              <h2 className="text-3xl font-bold tracking-tight mb-2">Welcome to NeuroPlan</h2>
+              <h2 className="text-3xl font-bold tracking-tight mb-2">Welcome to AI Planner</h2>
               <p className="text-white/60 leading-relaxed">
                 Your personal productivity OS is ready. AI-powered scheduling, proactive anti-procrastination, and spaced-repetition learning — all in one place.
               </p>
