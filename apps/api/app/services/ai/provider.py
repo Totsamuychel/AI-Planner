@@ -128,6 +128,39 @@ class OpenAIProvider(AIProvider):
         return AIExtractionResponse(items=items, model=self._model, used_ai=True)
 
 
+async def generate_structured(prompt: str, schema: dict[str, Any]) -> dict[str, Any] | None:
+    settings = get_settings()
+    if settings.ai_provider != "openai" or not settings.openai_api_key:
+        log.warning("generate_structured.skipped", reason="no api key")
+        return None
+        
+    payload = {
+        "model": settings.ai_model,
+        "temperature": 0.1,
+        "response_format": {"type": "json_object"},
+        "messages": [
+            {
+                "role": "system", 
+                "content": f"You are a helpful AI. Output ONLY valid JSON matching this schema: {json.dumps(schema)}"
+            },
+            {"role": "user", "content": prompt},
+        ],
+    }
+    headers = {
+        "authorization": f"Bearer {settings.openai_api_key}",
+        "content-type": "application/json",
+    }
+    try:
+        async with httpx.AsyncClient(timeout=45.0) as client:
+            r = await client.post("https://api.openai.com/v1/chat/completions", json=payload, headers=headers)
+            r.raise_for_status()
+            content = r.json()["choices"][0]["message"]["content"]
+            return json.loads(content)
+    except Exception as e:
+        log.warning("generate_structured.failed", error=str(e))
+        return None
+
+
 def get_provider() -> AIProvider:
     settings = get_settings()
     if settings.ai_provider == "openai" and settings.openai_api_key:
