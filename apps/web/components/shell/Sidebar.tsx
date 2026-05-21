@@ -28,6 +28,7 @@ const items: Item[] = [
   { href: '/calendar', label: 'Calendar', icon: CalendarDays, enabled: true },
   { href: '/inbox', label: 'Notes Inbox', icon: Inbox, enabled: true },
   { href: '/learning', label: 'Learning', icon: GraduationCap, enabled: true },
+  { href: '/focus', label: 'Focus Mode', icon: Sparkles, enabled: true },
   { href: '/analytics', label: 'Analytics', icon: LineChart, phase: 8 },
   { href: '/settings', label: 'Settings', icon: Settings, enabled: true },
 ];
@@ -73,9 +74,9 @@ export function Sidebar() {
       </nav>
 
       <div className="mt-auto rounded-xl border border-border bg-bg-card/60 p-3 text-xs text-gray-400">
-        <p className="text-[10px] uppercase tracking-widest text-gray-500">Phase 6 active</p>
+        <p className="text-[10px] uppercase tracking-widest text-gray-500">Phase 7 active</p>
         <p className="mt-2 leading-relaxed">
-          Learning Planner — goals, sessions, and spaced repetition.
+          Anti-procrastination — scores, micro-steps, and focus mode.
         </p>
       </div>
     </aside>

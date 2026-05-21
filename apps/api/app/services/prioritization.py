@@ -40,12 +40,26 @@ def urgency_from_due(due: datetime | None, now: datetime | None = None) -> float
     return 0.2
 
 
+def compute_procrastination_score(task: Task, *, now: datetime | None = None) -> float:
+    now = now or datetime.now(tz=UTC)
+    snooze_penalty = min(0.5, task.snooze_count * 0.1)
+    
+    created = task.created_at
+    if created.tzinfo is None:
+        created = created.replace(tzinfo=UTC)
+        
+    age_days = max(0, (now - created).total_seconds() / 86400)
+    time_penalty = min(0.5, age_days / 30.0)
+    
+    return min(1.0, snooze_penalty + time_penalty)
+
+
 def compute_priority_score(task: Task, *, now: datetime | None = None) -> float:
     urgency = urgency_from_due(task.due_date, now=now)
     importance = float(task.importance_score)
     effort_inverse = 1.0 - float(task.effort_score)
     strategic = 1.0 if task.project_id else 0.3
-    # mild boost when item has been snoozed a lot (helps surface neglected tasks)
+    
     procrastination_recovery = min(1.0, task.snooze_count * 0.15)
 
     score = (
@@ -75,5 +89,6 @@ def recompute(task: Task, *, now: datetime | None = None) -> None:
     now = now or datetime.now(tz=UTC)
     urgency = urgency_from_due(task.due_date, now=now)
     task.urgency_score = urgency
+    task.procrastination_score = compute_procrastination_score(task, now=now)
     task.priority_score = compute_priority_score(task, now=now)
     task.priority = bucket_from_score(task.priority_score, has_due_soon=urgency >= 0.95)

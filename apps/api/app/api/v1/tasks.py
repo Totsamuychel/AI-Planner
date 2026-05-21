@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query, status
 
@@ -9,6 +10,7 @@ from app.models.enums import PriorityBucket, TaskStatus
 from app.repositories.tasks import TaskFilter, TaskRepository
 from app.schemas.common import Page
 from app.schemas.task import TaskCreate, TaskRead, TaskSnoozeIn, TaskUpdate
+from app.services.ai.decomposition import decompose_task as ai_decompose_task
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
@@ -108,6 +110,32 @@ async def snooze_task(
     if task is None:
         raise HTTPException(status_code=404, detail="Task not found")
     return TaskRead.model_validate(await repo.snooze(task, payload.until))
+
+
+@router.post("/{task_id}/decompose", response_model=list[TaskRead])
+async def decompose_task_endpoint(
+    task_id: uuid.UUID, user: CurrentUser, session: SessionDep
+) -> list[TaskRead]:
+    repo = TaskRepository(session)
+    task = await repo.get(task_id, user.id)
+    if task is None:
+        raise HTTPException(status_code=404, detail="Task not found")
+        
+    subtasks_data = await ai_decompose_task(task.title, task.description)
+    created_subtasks = []
+    
+    for sub_data in subtasks_data:
+        payload = TaskCreate(
+            title=sub_data["title"],
+            description="",
+            estimated_minutes=sub_data.get("estimated_minutes"),
+            parent_id=task.id,
+            project_id=task.project_id
+        )
+        new_sub = await repo.create(user.id, payload)
+        created_subtasks.append(new_sub)
+        
+    return [TaskRead.model_validate(t) for t in created_subtasks]
 
 
 @router.post("/reprioritize", response_model=dict)
