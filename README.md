@@ -1,4 +1,4 @@
-# NeuroPlan
+# AI Planner
 
 AI-powered personal productivity OS: dashboard, Obsidian/notes ingestion,
 AI task extraction, day planner, Telegram + desktop reminders, learning
