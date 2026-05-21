@@ -22,6 +22,6 @@ async def update_telegram_settings(
     user: CurrentUser,
 ) -> dict[str, Any]:
     user.telegram_chat_id = settings_in.telegram_chat_id
-    await db.commit()
-    
+    await db.flush()
+
     return {"status": "ok", "telegram_chat_id": user.telegram_chat_id}

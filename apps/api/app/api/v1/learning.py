@@ -54,8 +54,8 @@ async def create_learning_goal(
         status=LearningItemStatus.BACKLOG,
     )
     db.add(item)
-    await db.commit()
-    await db.refresh(item)
+    await db.flush()
+    await db.refresh(item, attribute_names=["sessions"])
     return item
 
 
@@ -80,8 +80,7 @@ async def update_learning_goal(
     for field, value in update_data.items():
         setattr(item, field, value)
 
-    await db.commit()
-    await db.refresh(item)
+    await db.flush()
     return item
 
 
@@ -121,7 +120,7 @@ async def log_learning_session(
         # Simple Spaced Repetition mechanic: next review is in (completed_sessions * 2) days
         item.next_review_at = datetime.utcnow() + timedelta(days=item.completed_sessions * 2)
 
-    await db.commit()
+    await db.flush()
     await db.refresh(session)
     return session
 

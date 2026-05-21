@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 from enum import StrEnum
 
-from sqlalchemy import Enum, Float, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import DateTime, Enum, Float, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -50,7 +50,7 @@ class NoteSource(Base, TimestampMixin):
     path: Mapped[str] = mapped_column(String(1024), nullable=False)
     enabled: Mapped[bool] = mapped_column(default=True, nullable=False)
     sync_interval_seconds: Mapped[int] = mapped_column(Integer, default=300, nullable=False)
-    last_synced_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    last_synced_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     documents: Mapped[list["NoteDocument"]] = relationship(
@@ -75,7 +75,7 @@ class NoteDocument(Base, TimestampMixin):
     checksum: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     frontmatter: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
     word_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    indexed_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    indexed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     source: Mapped["NoteSource"] = relationship("NoteSource", back_populates="documents")
     entities: Mapped[list["ExtractedEntity"]] = relationship(

@@ -42,8 +42,8 @@ def urgency_from_due(due: datetime | None, now: datetime | None = None) -> float
 
 def compute_procrastination_score(task: Task, *, now: datetime | None = None) -> float:
     now = now or datetime.now(tz=UTC)
-    snooze_penalty = min(0.5, task.snooze_count * 0.1)
-    
+    snooze_penalty = min(0.5, (task.snooze_count or 0) * 0.1)
+
     created = task.created_at or now
     if created.tzinfo is None:
         created = created.replace(tzinfo=UTC)
@@ -56,11 +56,11 @@ def compute_procrastination_score(task: Task, *, now: datetime | None = None) ->
 
 def compute_priority_score(task: Task, *, now: datetime | None = None) -> float:
     urgency = urgency_from_due(task.due_date, now=now)
-    importance = float(task.importance_score)
-    effort_inverse = 1.0 - float(task.effort_score)
+    importance = float(task.importance_score or 0.0)
+    effort_inverse = 1.0 - float(task.effort_score or 0.0)
     strategic = 1.0 if task.project_id else 0.3
-    
-    procrastination_recovery = min(1.0, task.snooze_count * 0.15)
+
+    procrastination_recovery = min(1.0, (task.snooze_count or 0) * 0.15)
 
     score = (
         urgency * WEIGHTS["urgency"]

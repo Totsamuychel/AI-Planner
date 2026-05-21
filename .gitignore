@@ -17,6 +17,7 @@ node_modules/
 .next/
 out/
 .turbo/
+.pnpm-store/
 *.tsbuildinfo
 pnpm-debug.log*
 npm-debug.log*

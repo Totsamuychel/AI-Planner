@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Enum, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import DateTime, Enum, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -72,11 +72,13 @@ class Task(Base, TimestampMixin):
     procrastination_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     snooze_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
-    due_date: Mapped[datetime | None] = mapped_column(nullable=True, index=True)
-    scheduled_start: Mapped[datetime | None] = mapped_column(nullable=True)
-    scheduled_end: Mapped[datetime | None] = mapped_column(nullable=True)
-    completed_at: Mapped[datetime | None] = mapped_column(nullable=True)
-    snoozed_until: Mapped[datetime | None] = mapped_column(nullable=True)
+    due_date: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, index=True
+    )
+    scheduled_start: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    scheduled_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    snoozed_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     estimated_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
     actual_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
