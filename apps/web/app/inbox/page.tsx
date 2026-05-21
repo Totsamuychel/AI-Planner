@@ -21,6 +21,7 @@ export default function InboxPage() {
   const [filter, setFilter] = useState<EntityType | 'all'>('all');
 
   const sources = useQuery({ queryKey: ['notes', 'sources'], queryFn: notesApi.listSources });
+  const aiStatus = useQuery({ queryKey: ['notes', 'ai-status'], queryFn: notesApi.aiStatus });
   const inbox = useQuery({
     queryKey: ['notes', 'inbox', filter],
     queryFn: () => {
@@ -76,6 +77,19 @@ export default function InboxPage() {
           <p className="mt-1 text-sm text-gray-400">
             {inbox.data?.total ?? 0} pending items extracted from your notes vault.
           </p>
+          {aiStatus.data && (
+            <p className="mt-2 inline-flex items-center gap-2 rounded-full border border-border bg-bg-card/60 px-3 py-1 text-[11px] text-gray-300">
+              <span
+                className={cn(
+                  'h-1.5 w-1.5 rounded-full',
+                  aiStatus.data.enabled ? 'bg-success' : 'bg-warning',
+                )}
+              />
+              {aiStatus.data.enabled
+                ? `AI extraction: ${aiStatus.data.provider}`
+                : 'AI extraction: heuristic only (set OPENAI_API_KEY to enable)'}
+            </p>
+          )}
         </div>
         <button
           onClick={() => syncAll.mutate()}
@@ -238,6 +252,8 @@ function EntityCard({
   onReject: () => void;
 }) {
   const due = (entity.normalized_data?.due_at as string | undefined) ?? null;
+  const aiMeta = entity.normalized_data?.ai_meta as { ai?: boolean } | undefined;
+  const aiTouched = !!aiMeta?.ai;
   return (
     <motion.div
       layout
@@ -266,6 +282,11 @@ function EntityCard({
               <span>confidence {Math.round(entity.confidence * 100)}%</span>
               {due && <span>due {new Date(due).toLocaleString()}</span>}
               {entity.source_line && <span>line {entity.source_line}</span>}
+              {aiTouched && (
+                <span className="rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] uppercase tracking-wider text-accent-glow">
+                  AI
+                </span>
+              )}
             </div>
           </div>
           <div className="flex shrink-0 gap-2">
