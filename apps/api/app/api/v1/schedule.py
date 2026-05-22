@@ -5,12 +5,13 @@ from datetime import UTC, date, datetime
 from fastapi import APIRouter, Query
 
 from app.api.deps import CurrentUser, SessionDep
-from app.schemas.schedule import DayPlan, ScheduledBlockOut
+from app.schemas.schedule import DayPlan, ScheduledBlockOut, WeekPlan
 from app.services.scheduler import (
     ScheduledBlock,
     generate_for_user,
     rebalance_for_user,
     todays_plan,
+    week_plan,
 )
 
 router = APIRouter(prefix="/schedule", tags=["schedule"])
@@ -45,3 +46,18 @@ async def generate(
 async def rebalance(user: CurrentUser, session: SessionDep) -> DayPlan:
     blocks = await rebalance_for_user(session, user)
     return _to_dto(blocks)
+
+
+@router.get("/week", response_model=WeekPlan)
+async def get_week(user: CurrentUser, session: SessionDep) -> WeekPlan:
+    days = await week_plan(session, user)
+    return WeekPlan(
+        days=[
+            DayPlan(
+                date=day,
+                blocks=[ScheduledBlockOut(**b.__dict__) for b in blocks],
+                overflow_count=sum(1 for b in blocks if b.overflow),
+            )
+            for day, blocks in days.items()
+        ]
+    )

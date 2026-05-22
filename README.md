@@ -252,6 +252,16 @@ OLLAMA_MODEL=qwen2.5:7b
 
 With no key set, ingestion falls back to the offline heuristic parser.
 
+**Running Ollama locally.** The `ollama` service sits behind a Compose
+profile so its multi-gigabyte image is not pulled by default:
+
+```bash
+docker compose -f infra/docker/docker-compose.yml --profile ollama up -d
+docker compose -f infra/docker/docker-compose.yml exec ollama ollama pull qwen2.5:7b
+```
+
+Then set `AI_PROVIDER=ollama` in `.env` and restart the API.
+
 ### Telegram (optional)
 
 ```env

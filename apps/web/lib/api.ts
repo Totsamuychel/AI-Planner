@@ -186,8 +186,13 @@ export interface DayPlan {
   overflow_count: number;
 }
 
+export interface WeekPlan {
+  days: DayPlan[];
+}
+
 export const scheduleApi = {
   today: () => api<DayPlan>('/api/v1/schedule/today'),
+  week: () => api<WeekPlan>('/api/v1/schedule/week'),
   generate: () => api<DayPlan>('/api/v1/schedule/generate', { method: 'POST' }),
   rebalance: () => api<DayPlan>('/api/v1/schedule/rebalance', { method: 'POST' }),
 };

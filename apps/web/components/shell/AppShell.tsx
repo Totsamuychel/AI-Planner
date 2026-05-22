@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { CommandPalette } from './CommandPalette';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 
@@ -10,6 +11,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <Topbar />
         <main className="flex-1 px-6 py-8">{children}</main>
       </div>
+      <CommandPalette />
     </div>
   );
 }

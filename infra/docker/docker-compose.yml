@@ -89,5 +89,22 @@ services:
       - /app/node_modules
       - /app/.next
 
+  # Local LLM — optional. Enable with: docker compose --profile ollama up -d
+  # Then pull a model: docker compose exec ollama ollama pull qwen2.5:7b
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    profiles: ["ollama"]
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
 volumes:
   postgres_data:
+  ollama_models:

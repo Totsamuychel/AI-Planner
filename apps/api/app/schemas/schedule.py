@@ -21,3 +21,7 @@ class DayPlan(BaseModel):
     date: str
     blocks: list[ScheduledBlockOut]
     overflow_count: int
+
+
+class WeekPlan(BaseModel):
+    days: list[DayPlan]

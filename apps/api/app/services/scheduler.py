@@ -178,6 +178,45 @@ async def todays_plan(session: AsyncSession, user: User) -> list[ScheduledBlock]
     ]
 
 
+async def week_plan(session: AsyncSession, user: User) -> dict[str, list[ScheduledBlock]]:
+    """Read persisted scheduled tasks for the next 7 days, grouped by date."""
+    today = datetime.now(tz=UTC).date()
+    start_dt = datetime.combine(today, time(0, 0), tzinfo=UTC)
+    end_dt = start_dt + timedelta(days=7)
+    rows = (
+        await session.execute(
+            select(Task)
+            .where(Task.owner_id == user.id)
+            .where(Task.scheduled_start.is_not(None))
+            .where(Task.scheduled_start >= start_dt)
+            .where(Task.scheduled_start < end_dt)
+            .order_by(Task.scheduled_start.asc())
+        )
+    ).scalars().all()
+
+    days: dict[str, list[ScheduledBlock]] = {
+        (today + timedelta(days=i)).isoformat(): [] for i in range(7)
+    }
+    for t in rows:
+        if t.scheduled_start is None:
+            continue
+        key = t.scheduled_start.date().isoformat()
+        if key not in days:
+            continue
+        days[key].append(
+            ScheduledBlock(
+                task_id=str(t.id),
+                title=t.title,
+                priority=str(t.priority),
+                priority_score=float(t.priority_score),
+                energy_type=str(t.energy_type) if t.energy_type else None,
+                start=t.scheduled_start,
+                end=t.scheduled_end or (t.scheduled_start + timedelta(minutes=30)),
+            )
+        )
+    return days
+
+
 async def rebalance_for_user(session: AsyncSession, user: User) -> list[ScheduledBlock]:
     """Clear today's schedule and rebuild — used after major changes."""
     today = datetime.now(tz=UTC).date()
