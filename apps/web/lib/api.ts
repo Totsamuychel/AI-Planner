@@ -104,6 +104,10 @@ export const tasksApi = {
   decompose: (id: string) => api<Task[]>(`/api/v1/tasks/${id}/decompose`, { method: 'POST' }),
   setScores: (id: string, body: { importance_score: number; urgency_score: number }) =>
     api<Task>(`/api/v1/tasks/${id}/scores`, { method: 'PATCH', body: JSON.stringify(body) }),
+  aiSortMatrix: () =>
+    api<{ updated: number; used_ai: boolean }>('/api/v1/tasks/eisenhower/ai-sort', {
+      method: 'POST',
+    }),
   reprioritize: () =>
     api<{ reprioritized: number }>('/api/v1/tasks/reprioritize', { method: 'POST' }),
 };

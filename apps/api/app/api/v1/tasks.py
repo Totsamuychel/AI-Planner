@@ -12,6 +12,7 @@ from app.schemas.common import Page
 from app.schemas.task import TaskCreate, TaskRead, TaskScoresIn, TaskSnoozeIn, TaskUpdate
 from app.services import prioritization
 from app.services.ai.decomposition import decompose_task as ai_decompose_task
+from app.services.ai.eisenhower import ai_classify
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
@@ -161,6 +162,43 @@ async def set_task_scores(
     await session.flush()
     await session.refresh(task, attribute_names=["updated_at", "tags"])
     return TaskRead.model_validate(task)
+
+
+@router.post("/eisenhower/ai-sort", response_model=dict)
+async def ai_sort_eisenhower(user: CurrentUser, session: SessionDep) -> dict[str, Any]:
+    """Let the LLM place every open task on the Eisenhower matrix.
+
+    The model assigns importance/urgency for each task; we write the
+    scores back and recompute priority. If no AI provider is configured,
+    falls back to a deterministic heuristic (urgency from the due date).
+    """
+    repo = TaskRepository(session)
+    rows, _ = await repo.list(
+        user.id,
+        filt=TaskFilter(status=[TaskStatus.INBOX, TaskStatus.PLANNED, TaskStatus.ACTIVE]),
+        limit=200,
+    )
+    if not rows:
+        return {"updated": 0, "used_ai": False}
+
+    classified = await ai_classify(rows)
+    used_ai = bool(classified)
+
+    updated = 0
+    for task in rows:
+        if used_ai:
+            assigned = classified.get(str(task.id))
+            if assigned is None:
+                continue
+            task.importance_score, task.urgency_score = assigned
+        else:
+            # Heuristic fallback: derive urgency from the deadline.
+            task.urgency_score = prioritization.urgency_from_due(task.due_date)
+        prioritization.recompute_priority_only(task)
+        updated += 1
+
+    await session.flush()
+    return {"updated": updated, "used_ai": used_ai}
 
 
 @router.post("/reprioritize", response_model=dict)

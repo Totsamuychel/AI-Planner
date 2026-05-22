@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import { CheckCircle2, GripVertical } from 'lucide-react';
+import { CheckCircle2, GripVertical, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { tasksApi, type Page, type Task } from '@/lib/api';
 import { cn } from '@/lib/cn';
@@ -91,6 +91,20 @@ export default function MatrixPage() {
     },
   });
 
+  const [aiNote, setAiNote] = useState<string | null>(null);
+  const aiSort = useMutation({
+    mutationFn: tasksApi.aiSortMatrix,
+    onSuccess: (res) => {
+      setAiNote(
+        res.used_ai
+          ? `AI разложил ${res.updated} задач по матрице.`
+          : `AI недоступен — применена эвристика по дедлайнам (${res.updated} задач).`,
+      );
+      qc.invalidateQueries({ queryKey: ['tasks'] });
+    },
+    onError: () => setAiNote('Не удалось выполнить AI-сортировку.'),
+  });
+
   const move = useMutation({
     mutationFn: ({ id, importance, urgency }: { id: string; importance: number; urgency: number }) =>
       tasksApi.setScores(id, { importance_score: importance, urgency_score: urgency }),
@@ -139,13 +153,27 @@ export default function MatrixPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <p className="text-xs uppercase tracking-[0.2em] text-accent-glow">Prioritization</p>
-        <h1 className="mt-2 text-3xl font-semibold">Матрица Эйзенхауэра</h1>
-        <p className="mt-1 text-sm text-gray-400">
-          {items.length} активных задач · перетаскивайте карточки между квадрантами —
-          это меняет важность и срочность задачи.
-        </p>
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-xs uppercase tracking-[0.2em] text-accent-glow">Prioritization</p>
+          <h1 className="mt-2 text-3xl font-semibold">Матрица Эйзенхауэра</h1>
+          <p className="mt-1 text-sm text-gray-400">
+            {items.length} активных задач · перетаскивайте карточки между квадрантами —
+            это меняет важность и срочность задачи.
+          </p>
+          {aiNote && <p className="mt-1 text-xs text-accent-glow">{aiNote}</p>}
+        </div>
+        <button
+          onClick={() => {
+            setAiNote(null);
+            aiSort.mutate();
+          }}
+          disabled={aiSort.isPending || items.length === 0}
+          className="inline-flex items-center gap-2 rounded-lg border border-accent/40 bg-accent/10 px-4 py-2 text-sm text-accent-glow transition hover:border-accent disabled:opacity-50"
+        >
+          <Sparkles size={15} className={aiSort.isPending ? 'animate-spin' : ''} />
+          {aiSort.isPending ? 'AI сортирует…' : 'Сортировать с AI'}
+        </button>
       </header>
 
       {tasksQuery.isLoading && <div className="text-sm text-gray-500">Загрузка…</div>}
