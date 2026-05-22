@@ -239,4 +239,6 @@ async def accept_entity(session: AsyncSession, entity: ExtractedEntity) -> "Task
     entity.status = EntityStatus.ACCEPTED
     entity.promoted_task_id = task.id
     await session.flush()
+    # Initialize the tags collection so TaskRead serialization stays sync.
+    await session.refresh(task, attribute_names=["tags"])
     return task

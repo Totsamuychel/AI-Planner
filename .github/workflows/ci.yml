@@ -12,6 +12,22 @@ jobs:
     defaults:
       run:
         working-directory: apps/api
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: neuroplan
+          POSTGRES_PASSWORD: neuroplan
+          POSTGRES_DB: neuroplan
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U neuroplan"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      TEST_DATABASE_URL: postgresql+asyncpg://neuroplan:neuroplan@localhost:5432/neuroplan_test
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
