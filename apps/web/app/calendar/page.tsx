@@ -32,7 +32,7 @@ export default function CalendarPage() {
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-accent-glow">Schedule</p>
-          <h1 className="mt-2 text-3xl font-semibold">
+          <h1 className="mt-2 text-3xl font-semibold" suppressHydrationWarning>
             {new Date().toLocaleDateString(undefined, {
               weekday: 'long',
               day: 'numeric',

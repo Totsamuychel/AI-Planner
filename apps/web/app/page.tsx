@@ -40,7 +40,7 @@ export default function DashboardPage() {
         transition={{ duration: 0.35 }}
       >
         <p className="text-xs uppercase tracking-[0.2em] text-accent-glow">Today</p>
-        <h1 className="mt-2 text-4xl font-semibold">
+        <h1 className="mt-2 text-4xl font-semibold" suppressHydrationWarning>
           {new Date().toLocaleDateString(undefined, {
             weekday: 'long',
             day: 'numeric',
