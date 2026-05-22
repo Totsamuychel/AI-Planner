@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { CalendarDays, CalendarRange, Sparkles } from 'lucide-react';
+import { CalendarDays, CalendarRange, Sparkles, type LucideIcon } from 'lucide-react';
 import { useState } from 'react';
 import { scheduleApi } from '@/lib/api';
 import { cn } from '@/lib/cn';
@@ -100,7 +100,7 @@ function ViewBtn({
 }: {
   active: boolean;
   onClick: () => void;
-  icon: React.ComponentType<{ size?: number }>;
+  icon: LucideIcon;
   label: string;
 }) {
   return (

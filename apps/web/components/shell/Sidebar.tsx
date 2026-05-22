@@ -12,13 +12,14 @@ import {
   ListChecks,
   Settings,
   Sparkles,
+  type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
 type Item = {
   href: string;
   label: string;
-  icon: React.ComponentType<{ className?: string; size?: number }>;
+  icon: LucideIcon;
   phase?: number;
   enabled?: boolean;
 };

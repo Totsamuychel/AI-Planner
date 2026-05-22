@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import { LayoutList, Columns3, Sparkles, GripVertical } from 'lucide-react';
+import { LayoutList, Columns3, Sparkles, GripVertical, type LucideIcon } from 'lucide-react';
 import { useState } from 'react';
 import { tasksApi, type Page, type Task, type TaskStatus } from '@/lib/api';
 import { cn } from '@/lib/cn';
@@ -89,7 +89,7 @@ function ViewButton({
 }: {
   active: boolean;
   onClick: () => void;
-  icon: React.ComponentType<{ size?: number }>;
+  icon: LucideIcon;
   label: string;
 }) {
   return (

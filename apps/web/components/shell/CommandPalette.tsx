@@ -14,6 +14,7 @@ import {
   Settings,
   Sparkles,
   Target,
+  type LucideIcon,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -24,7 +25,7 @@ interface Command {
   id: string;
   label: string;
   hint?: string;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
+  icon: LucideIcon;
   run: () => void | Promise<void>;
 }
 

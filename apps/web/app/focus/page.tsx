@@ -62,7 +62,7 @@ export default function FocusModePage() {
         <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
           <Check size={32} className="text-white/20" />
         </div>
-        <h1 className="text-2xl font-semibold mb-2">You're all caught up!</h1>
+        <h1 className="text-2xl font-semibold mb-2">You&apos;re all caught up!</h1>
         <p className="text-white/50 max-w-md">
           There are no pending tasks. Take a well-deserved break or review your learning goals.
         </p>
@@ -114,7 +114,7 @@ export default function FocusModePage() {
       {activeTask.procrastination_score > 0.3 && (
         <div className="bg-warning/10 text-warning px-6 py-4 rounded-2xl text-sm max-w-md">
           <span className="font-semibold block mb-1">Anti-procrastination Nudge</span>
-          You've put this off for a while. Just commit to the next 5 minutes. You can stop after that if you want to!
+          You&apos;ve put this off for a while. Just commit to the next 5 minutes. You can stop after that if you want to!
         </div>
       )}
     </div>
