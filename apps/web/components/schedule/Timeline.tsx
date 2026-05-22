@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { Clock } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import type { ScheduledBlock } from '@/lib/api';
 import { cn } from '@/lib/cn';
 
@@ -90,7 +91,18 @@ export function ScheduleTimeline({ blocks, compact = false }: { blocks: Schedule
 }
 
 function NowIndicator({ totalMinutes }: { totalMinutes: number }) {
-  const now = new Date();
+  // Render only after mount: the position depends on the current time,
+  // which differs between the server and the client and would otherwise
+  // cause a hydration mismatch.
+  const [now, setNow] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setNow(new Date());
+    const id = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  if (!now) return null;
   const minutes = now.getHours() * 60 + now.getMinutes() - HOUR_START * 60;
   if (minutes < 0 || minutes > totalMinutes) return null;
   const top = (minutes / totalMinutes) * 100;
