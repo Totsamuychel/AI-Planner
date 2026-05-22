@@ -9,7 +9,8 @@ from app.api.deps import CurrentUser, SessionDep
 from app.models.enums import PriorityBucket, TaskStatus
 from app.repositories.tasks import TaskFilter, TaskRepository
 from app.schemas.common import Page
-from app.schemas.task import TaskCreate, TaskRead, TaskSnoozeIn, TaskUpdate
+from app.schemas.task import TaskCreate, TaskRead, TaskScoresIn, TaskSnoozeIn, TaskUpdate
+from app.services import prioritization
 from app.services.ai.decomposition import decompose_task as ai_decompose_task
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
@@ -136,6 +137,30 @@ async def decompose_task_endpoint(
         created_subtasks.append(new_sub)
         
     return [TaskRead.model_validate(t) for t in created_subtasks]
+
+
+@router.patch("/{task_id}/scores", response_model=TaskRead)
+async def set_task_scores(
+    task_id: uuid.UUID,
+    payload: TaskScoresIn,
+    user: CurrentUser,
+    session: SessionDep,
+) -> TaskRead:
+    """Set importance/urgency directly (Eisenhower matrix drag-and-drop).
+
+    Recomputes priority_score and bucket from the supplied axes without
+    re-deriving urgency from the due date.
+    """
+    repo = TaskRepository(session)
+    task = await repo.get(task_id, user.id)
+    if task is None:
+        raise HTTPException(status_code=404, detail="Task not found")
+    task.importance_score = payload.importance_score
+    task.urgency_score = payload.urgency_score
+    prioritization.recompute_priority_only(task)
+    await session.flush()
+    await session.refresh(task, attribute_names=["updated_at", "tags"])
+    return TaskRead.model_validate(task)
 
 
 @router.post("/reprioritize", response_model=dict)

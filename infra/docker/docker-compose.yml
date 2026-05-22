@@ -48,7 +48,9 @@ services:
       - "8000:8000"
     volumes:
       - ../../apps/api:/app
-      - vault_data:/data/vault
+      # Bind-mount the real Obsidian vault from the host (read-only).
+      # Set OBSIDIAN_VAULT_HOST in .env; falls back to a local placeholder dir.
+      - "${OBSIDIAN_VAULT_HOST:-./vault-placeholder}:/data/vault:ro"
 
   worker:
     build:
@@ -68,7 +70,6 @@ services:
         condition: service_healthy
     volumes:
       - ../../apps/worker:/app
-      - vault_data:/data/vault
 
   web:
     build:
@@ -90,4 +91,3 @@ services:
 
 volumes:
   postgres_data:
-  vault_data:

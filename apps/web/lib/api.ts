@@ -102,6 +102,8 @@ export const tasksApi = {
   complete: (id: string) => api<Task>(`/api/v1/tasks/${id}/complete`, { method: 'POST' }),
   remove: (id: string) => api<void>(`/api/v1/tasks/${id}`, { method: 'DELETE' }),
   decompose: (id: string) => api<Task[]>(`/api/v1/tasks/${id}/decompose`, { method: 'POST' }),
+  setScores: (id: string, body: { importance_score: number; urgency_score: number }) =>
+    api<Task>(`/api/v1/tasks/${id}/scores`, { method: 'PATCH', body: JSON.stringify(body) }),
   reprioritize: () =>
     api<{ reprioritized: number }>('/api/v1/tasks/reprioritize', { method: 'POST' }),
 };

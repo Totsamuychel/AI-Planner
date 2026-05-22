@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   CalendarDays,
+  Grid2x2,
   GraduationCap,
   Inbox,
   LayoutDashboard,
@@ -25,6 +26,7 @@ type Item = {
 const items: Item[] = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard, enabled: true },
   { href: '/tasks', label: 'Tasks', icon: ListChecks, enabled: true },
+  { href: '/matrix', label: 'Eisenhower', icon: Grid2x2, enabled: true },
   { href: '/calendar', label: 'Calendar', icon: CalendarDays, enabled: true },
   { href: '/inbox', label: 'Notes Inbox', icon: Inbox, enabled: true },
   { href: '/learning', label: 'Learning', icon: GraduationCap, enabled: true },

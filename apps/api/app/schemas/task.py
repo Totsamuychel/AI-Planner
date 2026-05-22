@@ -49,6 +49,13 @@ class TaskSnoozeIn(BaseModel):
     until: datetime
 
 
+class TaskScoresIn(BaseModel):
+    """Manual urgency/importance update — used by the Eisenhower matrix."""
+
+    importance_score: float = Field(ge=0.0, le=1.0)
+    urgency_score: float = Field(ge=0.0, le=1.0)
+
+
 class TaskRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

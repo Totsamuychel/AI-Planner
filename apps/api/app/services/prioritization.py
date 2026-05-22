@@ -54,8 +54,11 @@ def compute_procrastination_score(task: Task, *, now: datetime | None = None) ->
     return min(1.0, snooze_penalty + time_penalty)
 
 
-def compute_priority_score(task: Task, *, now: datetime | None = None) -> float:
-    urgency = urgency_from_due(task.due_date, now=now)
+def compute_priority_score(
+    task: Task, *, now: datetime | None = None, urgency: float | None = None
+) -> float:
+    if urgency is None:
+        urgency = urgency_from_due(task.due_date, now=now)
     importance = float(task.importance_score or 0.0)
     effort_inverse = 1.0 - float(task.effort_score or 0.0)
     strategic = 1.0 if task.project_id else 0.3
@@ -91,4 +94,19 @@ def recompute(task: Task, *, now: datetime | None = None) -> None:
     task.urgency_score = urgency
     task.procrastination_score = compute_procrastination_score(task, now=now)
     task.priority_score = compute_priority_score(task, now=now)
+    task.priority = bucket_from_score(task.priority_score, has_due_soon=urgency >= 0.95)
+
+
+def recompute_priority_only(task: Task, *, now: datetime | None = None) -> None:
+    """Recompute priority_score and bucket from the task's CURRENT scores.
+
+    Unlike `recompute`, this does NOT re-derive urgency from `due_date` —
+    it trusts whatever `urgency_score` / `importance_score` are already on
+    the task. Used by the Eisenhower matrix, where the user sets those
+    axes explicitly by dragging cards between quadrants.
+    """
+    now = now or datetime.now(tz=UTC)
+    urgency = float(task.urgency_score or 0.0)
+    task.procrastination_score = compute_procrastination_score(task, now=now)
+    task.priority_score = compute_priority_score(task, now=now, urgency=urgency)
     task.priority = bucket_from_score(task.priority_score, has_due_soon=urgency >= 0.95)
