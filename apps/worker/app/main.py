@@ -20,6 +20,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from app.config import get_settings
 from app.jobs.notes_sync import run_notes_sync
 from app.jobs.notifications_dispatch import run_notifications_dispatch
+from app.jobs.subscriptions_check import run_subscriptions_check
 from app.bot import start_bot
 
 
@@ -61,6 +62,13 @@ async def run() -> None:
         "interval",
         seconds=60,
         id="notifications_dispatch",
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        run_subscriptions_check,
+        "interval",
+        seconds=int(os.getenv("SUBSCRIPTIONS_CHECK_SECONDS", "3600")),
+        id="subscriptions_check",
         replace_existing=True,
     )
     scheduler.start()

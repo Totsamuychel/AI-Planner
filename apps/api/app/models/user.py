@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime
 
-from sqlalchemy import String
+from sqlalchemy import DateTime, String, Text
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -22,6 +23,14 @@ class User(Base, TimestampMixin):
     work_hours_start: Mapped[str] = mapped_column(String(5), nullable=False, default="09:00")
     work_hours_end: Mapped[str] = mapped_column(String(5), nullable=False, default="18:00")
     telegram_chat_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
+
+    # --- Google Calendar OAuth tokens ---
+    google_access_token: Mapped[str | None] = mapped_column(Text, nullable=True)
+    google_refresh_token: Mapped[str | None] = mapped_column(Text, nullable=True)
+    google_token_expiry: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    google_calendar_id: Mapped[str] = mapped_column(String(255), nullable=False, default="primary")
 
     projects: Mapped[list["Project"]] = relationship(  # noqa: F821
         "Project", back_populates="owner", cascade="all,delete-orphan"

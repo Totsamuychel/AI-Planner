@@ -1,11 +1,33 @@
 'use client';
 
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { settingsApi, notificationsApi } from '@/lib/api';
+import { googleApi, settingsApi, notificationsApi } from '@/lib/api';
 
 export default function SettingsPage() {
   const [chatId, setChatId] = useState('');
   const [testMessage, setTestMessage] = useState('Hello from AI Planner!');
+  const qc = useQueryClient();
+  const google = useQuery({ queryKey: ['google', 'status'], queryFn: googleApi.status });
+
+  const connectGoogle = async () => {
+    try {
+      const { url } = await googleApi.authUrl();
+      window.location.href = url;
+    } catch (e) {
+      alert('Google OAuth не настроен на сервере (.env: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET).');
+      console.error(e);
+    }
+  };
+
+  const disconnectGoogle = async () => {
+    try {
+      await googleApi.disconnect();
+      qc.invalidateQueries({ queryKey: ['google'] });
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const handleSaveTelegram = async () => {
     try {
@@ -61,6 +83,50 @@ export default function SettingsPage() {
           >
             Save Chat ID
           </button>
+        </div>
+      </section>
+
+      <section className="bg-surface p-6 rounded-2xl border border-white/5 space-y-4 shadow-sm">
+        <h2 className="text-xl font-medium">Google Calendar</h2>
+        <p className="text-sm text-white/50">
+          Подключите аккаунт Google — AI Planner будет читать события и пушить туда задачи.
+          Инструкция по созданию OAuth-клиента: <code>docs/GOOGLE_CALENDAR.md</code>.
+        </p>
+        {!google.data?.configured && (
+          <div className="rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning">
+            OAuth не настроен на сервере. Заполните <code>GOOGLE_CLIENT_ID</code> и
+            <code> GOOGLE_CLIENT_SECRET</code> в <code>.env</code> и перезапустите api.
+          </div>
+        )}
+        <div className="flex items-center gap-3">
+          <span
+            className={`inline-flex h-2 w-2 shrink-0 rounded-full ${
+              google.data?.connected ? 'bg-emerald-400' : 'bg-white/30'
+            }`}
+          />
+          <span className="text-sm">
+            {google.data?.connected
+              ? `Подключено · calendar: ${google.data.calendar_id}`
+              : 'Не подключено'}
+          </span>
+          <div className="ml-auto flex gap-2">
+            {google.data?.connected ? (
+              <button
+                onClick={disconnectGoogle}
+                className="bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              >
+                Disconnect
+              </button>
+            ) : (
+              <button
+                onClick={connectGoogle}
+                disabled={!google.data?.configured}
+                className="bg-accent/10 hover:bg-accent/20 text-accent disabled:opacity-40 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              >
+                Connect Google Calendar
+              </button>
+            )}
+          </div>
         </div>
       </section>
 

@@ -1,6 +1,18 @@
 from fastapi import APIRouter
 
-from app.api.v1 import analytics, health, learning, notes, notifications, projects, schedule, settings, tasks
+from app.api.v1 import (
+    analytics,
+    google,
+    health,
+    learning,
+    notes,
+    notifications,
+    projects,
+    schedule,
+    settings,
+    subscriptions,
+    tasks,
+)
 
 api_router = APIRouter(prefix="/api/v1")
 api_router.include_router(health.router)
@@ -12,5 +24,7 @@ api_router.include_router(analytics.router)
 api_router.include_router(notifications.router)
 api_router.include_router(settings.router)
 api_router.include_router(learning.router)
+api_router.include_router(subscriptions.router)
+api_router.include_router(google.router)
 
 

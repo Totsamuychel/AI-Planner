@@ -12,6 +12,7 @@ import {
   ListChecks,
   Settings,
   Sparkles,
+  Wallet,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
@@ -31,6 +32,7 @@ const items: Item[] = [
   { href: '/calendar', label: 'Calendar', icon: CalendarDays, enabled: true },
   { href: '/inbox', label: 'Notes Inbox', icon: Inbox, enabled: true },
   { href: '/learning', label: 'Learning', icon: GraduationCap, enabled: true },
+  { href: '/subscriptions', label: 'Subscriptions', icon: Wallet, enabled: true },
   { href: '/focus', label: 'Focus Mode', icon: Sparkles, enabled: true },
   { href: '/analytics', label: 'Analytics', icon: LineChart, enabled: true },
   { href: '/settings', label: 'Settings', icon: Settings, enabled: true },

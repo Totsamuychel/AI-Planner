@@ -21,6 +21,9 @@ dependencies = [
   "orjson>=3.10.7",
   "pyyaml>=6.0.2",
   "watchfiles>=0.24.0",
+  "google-auth>=2.35.0",
+  "google-auth-oauthlib>=1.2.1",
+  "google-api-python-client>=2.149.0",
 ]
 
 [project.optional-dependencies]

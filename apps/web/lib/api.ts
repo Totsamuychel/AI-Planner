@@ -248,6 +248,74 @@ export const learningApi = {
   getReviewItems: () => api<LearningItem[]>('/api/v1/learning/review'),
 };
 
+// ---------- google calendar ----------
+
+export interface GoogleStatus {
+  configured: boolean;
+  connected: boolean;
+  calendar_id: string;
+}
+
+export interface GoogleEvent {
+  id: string;
+  summary?: string;
+  description?: string;
+  start?: { dateTime?: string; date?: string };
+  end?: { dateTime?: string; date?: string };
+  htmlLink?: string;
+  colorId?: string;
+}
+
+export const googleApi = {
+  status: () => api<GoogleStatus>('/api/v1/google/status'),
+  authUrl: () => api<{ url: string; state: string }>('/api/v1/google/auth/url'),
+  disconnect: () => api<void>('/api/v1/google/disconnect', { method: 'POST' }),
+  events: (params?: URLSearchParams) =>
+    api<{ events: GoogleEvent[] }>(
+      `/api/v1/google/events${params?.toString() ? `?${params}` : ''}`,
+    ),
+  aiPlan: () =>
+    api<{ created: number; skipped: number; day: string }>('/api/v1/google/ai-plan', {
+      method: 'POST',
+    }),
+};
+
+// ---------- subscriptions ----------
+
+export type BillingPeriod = 'monthly' | 'yearly' | 'weekly' | 'quarterly';
+
+export interface Subscription {
+  id: string;
+  owner_id: string;
+  name: string;
+  amount: number;
+  currency: string;
+  billing_period: BillingPeriod;
+  next_billing_date: string; // ISO date
+  notify_days_before: number;
+  active: boolean;
+  notes: string;
+  last_notified_at: string | null;
+}
+
+export interface SubscriptionsSummary {
+  total_count: number;
+  active_count: number;
+  monthly_total: number;
+  upcoming: Subscription[];
+}
+
+export const subscriptionsApi = {
+  list: () => api<Subscription[]>('/api/v1/subscriptions'),
+  summary: () => api<SubscriptionsSummary>('/api/v1/subscriptions/summary'),
+  create: (body: Partial<Subscription> & { name: string; amount: number; next_billing_date: string }) =>
+    api<Subscription>('/api/v1/subscriptions', { method: 'POST', body: JSON.stringify(body) }),
+  update: (id: string, body: Partial<Subscription>) =>
+    api<Subscription>(`/api/v1/subscriptions/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+  remove: (id: string) =>
+    api<void>(`/api/v1/subscriptions/${id}`, { method: 'DELETE' }),
+};
+
 
 export const settingsApi = {
   updateTelegram: (telegram_chat_id: string | null) =>

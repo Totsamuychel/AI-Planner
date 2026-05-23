@@ -1,48 +1,102 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { CalendarDays, CalendarRange, Sparkles, type LucideIcon } from 'lucide-react';
+import {
+  CalendarDays,
+  CalendarRange,
+  ExternalLink,
+  Sparkles,
+  type LucideIcon,
+} from 'lucide-react';
+import Link from 'next/link';
 import { useState } from 'react';
-import { scheduleApi } from '@/lib/api';
+import { googleApi, type GoogleEvent } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { ScheduleTimeline } from '@/components/schedule/Timeline';
 
 type View = 'day' | 'week';
 
+interface NormalizedBlock {
+  task_id: string;
+  title: string;
+  priority: 'P0' | 'P1' | 'P2' | 'P3' | 'P4';
+  priority_score: number;
+  energy_type: null;
+  start: string;
+  end: string;
+  overflow: boolean;
+}
+
+function eventStart(e: GoogleEvent): string | null {
+  return e.start?.dateTime ?? e.start?.date ?? null;
+}
+function eventEnd(e: GoogleEvent): string | null {
+  return e.end?.dateTime ?? e.end?.date ?? null;
+}
+function toBlock(e: GoogleEvent): NormalizedBlock | null {
+  const s = eventStart(e);
+  const en = eventEnd(e);
+  if (!s || !en) return null;
+  return {
+    task_id: e.id,
+    title: e.summary || '(без названия)',
+    priority: 'P2',
+    priority_score: 0.5,
+    energy_type: null,
+    start: s,
+    end: en,
+    overflow: false,
+  };
+}
+
 export default function CalendarPage() {
   const qc = useQueryClient();
   const [view, setView] = useState<View>('day');
 
-  const today = useQuery({ queryKey: ['schedule', 'today'], queryFn: scheduleApi.today });
+  const status = useQuery({ queryKey: ['google', 'status'], queryFn: googleApi.status });
+  const connected = !!status.data?.connected;
+
+  const today = useQuery({
+    queryKey: ['google', 'events', 'day'],
+    queryFn: () => googleApi.events(),
+    enabled: connected && view === 'day',
+  });
+
   const week = useQuery({
-    queryKey: ['schedule', 'week'],
-    queryFn: scheduleApi.week,
-    enabled: view === 'week',
+    queryKey: ['google', 'events', 'week'],
+    queryFn: () => {
+      const start = new Date();
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(start);
+      end.setDate(end.getDate() + 7);
+      const p = new URLSearchParams({
+        start: start.toISOString(),
+        end: end.toISOString(),
+      });
+      return googleApi.events(p);
+    },
+    enabled: connected && view === 'week',
   });
 
-  const generate = useMutation({
-    mutationFn: scheduleApi.generate,
+  const aiPlan = useMutation({
+    mutationFn: googleApi.aiPlan,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['schedule'] });
+      qc.invalidateQueries({ queryKey: ['google', 'events'] });
       qc.invalidateQueries({ queryKey: ['tasks'] });
     },
   });
-  const rebalance = useMutation({
-    mutationFn: scheduleApi.rebalance,
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['schedule'] });
-      qc.invalidateQueries({ queryKey: ['tasks'] });
-    },
-  });
 
-  const plan = today.data;
+  const dayBlocks = (today.data?.events ?? [])
+    .map(toBlock)
+    .filter((b): b is NormalizedBlock => !!b);
+  const weekEvents = week.data?.events ?? [];
 
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-accent-glow">Schedule</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-accent-glow">Google Calendar</p>
           <h1 className="mt-2 text-3xl font-semibold" suppressHydrationWarning>
             {new Date().toLocaleDateString(undefined, {
               weekday: 'long',
@@ -51,44 +105,73 @@ export default function CalendarPage() {
             })}
           </h1>
           <p className="mt-1 text-sm text-gray-400">
-            {view === 'day'
-              ? `${plan?.blocks.length ?? 0} blocks · ${plan?.overflow_count ?? 0} overflow`
-              : 'Запланированные задачи на 7 дней вперёд.'}
+            {connected
+              ? view === 'day'
+                ? `${dayBlocks.length} events today`
+                : 'События на 7 дней вперёд'
+              : 'Подключите Google Calendar в Settings, чтобы видеть события и пушить туда задачи.'}
           </p>
+          {aiPlan.data && (
+            <p className="mt-1 text-xs text-accent-glow">
+              Создано событий в Google: {aiPlan.data.created} (skipped {aiPlan.data.skipped}).
+            </p>
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex rounded-lg border border-border bg-bg-card/60 p-0.5">
             <ViewBtn active={view === 'day'} onClick={() => setView('day')} icon={CalendarDays} label="Day" />
             <ViewBtn active={view === 'week'} onClick={() => setView('week')} icon={CalendarRange} label="Week" />
           </div>
-          <button
-            onClick={() => generate.mutate()}
-            disabled={generate.isPending}
-            className="inline-flex items-center gap-2 rounded-lg border border-accent/40 bg-accent/10 px-3 py-2 text-xs text-accent-glow transition hover:border-accent disabled:opacity-50"
-          >
-            <Sparkles size={14} /> Generate plan
-          </button>
-          <button
-            onClick={() => rebalance.mutate()}
-            disabled={rebalance.isPending}
-            className="inline-flex items-center gap-2 rounded-lg border border-border bg-bg-card/60 px-3 py-2 text-xs text-gray-300 transition hover:border-border-strong disabled:opacity-50"
-          >
-            <CalendarDays size={14} /> Rebalance
-          </button>
+          {connected ? (
+            <button
+              onClick={() => aiPlan.mutate()}
+              disabled={aiPlan.isPending}
+              className="inline-flex items-center gap-2 rounded-lg border border-accent/40 bg-accent/10 px-3 py-2 text-xs text-accent-glow transition hover:border-accent disabled:opacity-50"
+            >
+              <Sparkles size={14} className={aiPlan.isPending ? 'animate-spin' : ''} />
+              {aiPlan.isPending ? 'Планирую…' : 'AI план → Google'}
+            </button>
+          ) : (
+            <Link
+              href="/settings"
+              className="inline-flex items-center gap-2 rounded-lg border border-accent/40 bg-accent/10 px-3 py-2 text-xs text-accent-glow transition hover:border-accent"
+            >
+              <ExternalLink size={14} /> Connect Google
+            </Link>
+          )}
         </div>
       </header>
 
-      {view === 'day' ? (
+      {!connected && <NotConnectedHint configured={!!status.data?.configured} />}
+
+      {connected && view === 'day' && (
         <Card className="px-5 pb-6 pt-5">
-          <CardHeader title="Day timeline" hint="6:00 → 23:00 · powered by AI Planner scheduler" />
+          <CardHeader title="Day timeline" hint="6:00 → 23:00 · Google Calendar events" />
           <div className="mt-4">
-            <ScheduleTimeline blocks={plan?.blocks ?? []} />
+            <ScheduleTimeline blocks={dayBlocks} />
           </div>
         </Card>
-      ) : (
-        <WeekView days={week.data?.days ?? []} loading={week.isLoading} />
+      )}
+
+      {connected && view === 'week' && (
+        <WeekView events={weekEvents} loading={week.isLoading} />
       )}
     </div>
+  );
+}
+
+function NotConnectedHint({ configured }: { configured: boolean }) {
+  return (
+    <Card className="px-5 py-8 text-center">
+      <p className="text-sm text-gray-300">
+        {configured
+          ? 'Google OAuth настроен на бэкенде, но аккаунт ещё не подключён. Откройте Settings и нажмите «Connect Google Calendar».'
+          : 'Google OAuth не настроен. В .env добавьте GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET, перезапустите api и подключитесь в Settings.'}
+      </p>
+      <p className="mt-2 text-xs text-gray-500">
+        Инструкция: <code>docs/GOOGLE_CALENDAR.md</code>
+      </p>
+    </Card>
   );
 }
 
@@ -117,31 +200,33 @@ function ViewBtn({
   );
 }
 
-function WeekView({
-  days,
-  loading,
-}: {
-  days: { date: string; blocks: { task_id: string; title: string; priority: string; start: string }[] }[];
-  loading: boolean;
-}) {
+function WeekView({ events, loading }: { events: GoogleEvent[]; loading: boolean }) {
   if (loading) return <div className="text-sm text-gray-500">Загрузка…</div>;
-
-  const priorityDot: Record<string, string> = {
-    P0: 'bg-danger',
-    P1: 'bg-warning',
-    P2: 'bg-accent',
-    P3: 'bg-gray-500',
-    P4: 'bg-gray-600',
-  };
-
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(today);
+    d.setDate(d.getDate() + i);
+    return d;
+  });
+  const byDay = new Map<string, GoogleEvent[]>(
+    days.map((d) => [d.toISOString().slice(0, 10), []]),
+  );
+  for (const e of events) {
+    const s = eventStart(e);
+    if (!s) continue;
+    const key = s.slice(0, 10);
+    if (byDay.has(key)) byDay.get(key)!.push(e);
+  }
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
       {days.map((d) => {
-        const date = new Date(d.date + 'T00:00:00');
-        const isToday = d.date === new Date().toISOString().slice(0, 10);
+        const key = d.toISOString().slice(0, 10);
+        const list = byDay.get(key) ?? [];
+        const isToday = key === today.toISOString().slice(0, 10);
         return (
           <div
-            key={d.date}
+            key={key}
             className={cn(
               'flex min-h-[220px] flex-col rounded-2xl border bg-bg-card/40 p-3',
               isToday ? 'border-accent/50' : 'border-border',
@@ -155,37 +240,45 @@ function WeekView({
                 )}
                 suppressHydrationWarning
               >
-                {date.toLocaleDateString(undefined, { weekday: 'short' })}
+                {d.toLocaleDateString(undefined, { weekday: 'short' })}
               </span>
               <span className="text-[11px] text-gray-500" suppressHydrationWarning>
-                {date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+                {d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
               </span>
             </div>
             <div className="flex flex-1 flex-col gap-1.5">
-              {d.blocks.length === 0 && (
+              {list.length === 0 && (
                 <div className="flex flex-1 items-center justify-center text-[11px] text-gray-600">
                   —
                 </div>
               )}
-              {d.blocks.map((b) => (
-                <div
-                  key={b.task_id}
-                  className="rounded-lg border border-border bg-bg-card px-2.5 py-1.5"
-                >
-                  <div className="flex items-center gap-1.5">
-                    <span
-                      className={cn('h-1.5 w-1.5 shrink-0 rounded-full', priorityDot[b.priority] ?? 'bg-gray-500')}
-                    />
-                    <span className="text-[11px] text-gray-400" suppressHydrationWarning>
-                      {new Date(b.start).toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </span>
-                  </div>
-                  <div className="mt-0.5 line-clamp-2 text-xs">{b.title}</div>
-                </div>
-              ))}
+              {list.map((e) => {
+                const start = eventStart(e);
+                return (
+                  <a
+                    key={e.id}
+                    href={e.htmlLink || '#'}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="rounded-lg border border-border bg-bg-card px-2.5 py-1.5 transition hover:border-border-strong"
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+                      <span className="text-[11px] text-gray-400" suppressHydrationWarning>
+                        {start
+                          ? new Date(start).toLocaleTimeString([], {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })
+                          : 'all day'}
+                      </span>
+                    </div>
+                    <div className="mt-0.5 line-clamp-2 text-xs">
+                      {e.summary || '(без названия)'}
+                    </div>
+                  </a>
+                );
+              })}
             </div>
           </div>
         );
